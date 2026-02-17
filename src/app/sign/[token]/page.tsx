@@ -18,7 +18,10 @@ export default async function SignPage({
 
   if (!recipient) redirect("/");
 
-  const docPath = recipient.envelopes?.document_url as string;
+  type Envs = { document_url: string } | { document_url: string }[];
+  const envs = recipient.envelopes as Envs | null;
+  const docPath = Array.isArray(envs) ? envs[0]?.document_url : envs?.document_url;
+  if (!docPath) redirect("/");
   const { data: signed } = await admin.storage
     .from("documents")
     .createSignedUrl(docPath, 60 * 60);
