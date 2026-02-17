@@ -26,6 +26,12 @@ export async function POST(req: Request) {
 
     if (!recipient) return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
 
+    type EnvelopeTitle = { title?: string } | { title?: string }[] | null;
+    const envelopes = recipient.envelopes as EnvelopeTitle;
+    const envelopeTitle = Array.isArray(envelopes)
+      ? envelopes[0]?.title
+      : envelopes?.title;
+
     const siteUrl = (NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
     const link = `${siteUrl}/sign/${recipient.access_token}`;
 
@@ -45,12 +51,12 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: SMTP_FROM,
       to: recipient.email,
-      subject: `Please sign: ${recipient.envelopes?.title || "Document"}`,
+      subject: `Please sign: ${envelopeTitle || "Document"}`,
       html: `
         <div style="font-family: 'Inter', Arial, sans-serif; max-width: 660px; margin: 0 auto; padding: 24px; background: linear-gradient(135deg,#0f172a,#0b1224); color: #e5e7eb; border-radius: 18px;">
           <div style="padding: 20px; border: 1px solid #1f2937; border-radius: 14px; background: #0b1224;">
             <div style="font-weight: 700; font-size: 20px; margin-bottom: 6px;">Please sign this document</div>
-            <div style="opacity: 0.85; margin-bottom: 16px;">${recipient.envelopes?.title || "Document"}</div>
+            <div style="opacity: 0.85; margin-bottom: 16px;">${envelopeTitle || "Document"}</div>
             <a href="${link}" style="display:inline-block;padding:14px 20px;background:#6366f1;color:#fff;text-decoration:none;border-radius:12px;font-weight:600;box-shadow:0 12px 30px rgba(99,102,241,0.35);">Open & Sign</a>
           </div>
           <div style="margin-top:16px;font-size:12px;opacity:0.75;line-height:1.6;">
