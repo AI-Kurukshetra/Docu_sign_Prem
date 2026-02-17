@@ -7,7 +7,7 @@ type RecipientWithEnvelope = {
   envelope_id: string;
   access_token: string;
   status: string;
-  envelopes: { document_url: string };
+  envelopes: { document_url: string } | { document_url: string }[];
 };
 
 export async function POST(req: Request) {
@@ -29,7 +29,10 @@ export async function POST(req: Request) {
     }
 
     // Download original PDF
-    const originalPath = (recipient as RecipientWithEnvelope).envelopes.document_url;
+    const envelopes = (recipient as RecipientWithEnvelope).envelopes;
+    const originalPath = Array.isArray(envelopes)
+      ? envelopes[0]?.document_url
+      : envelopes.document_url;
     const { data: download, error: dlErr } = await admin.storage
       .from("documents")
       .download(originalPath);
