@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { Buffer } from "buffer";
 import { PDFDocument } from "pdf-lib";
 
 type RecipientWithEnvelope = {
@@ -63,9 +64,13 @@ export async function POST(req: Request) {
     const stampedBytes = await pdfDoc.save();
     const finalPath = `documents/final/${recipient.envelope_id}.pdf`;
 
+    const stampedBuffer = Buffer.from(stampedBytes);
     const { error: uploadErr } = await admin.storage
       .from("documents")
-      .upload(finalPath, new Blob([stampedBytes]), { upsert: true });
+      .upload(finalPath, stampedBuffer, {
+        upsert: true,
+        contentType: "application/pdf",
+      });
     if (uploadErr) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
